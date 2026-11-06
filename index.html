@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA-панель · SIM и сервисы</title>
+<style>
+:root{
+  --bg:#f6f9ff;--panel:#fff;--ink:#202b3b;--muted:#718097;--line:#dfe7f2;--accent:#3974dc;--accent2:#eaf2ff;
+  --green:#17845e;--greenbg:#e8f7ef;--red:#c43e4b;--redbg:#fff0f1;--amber:#986100;--amberbg:#fff5df;
+  --grid:#d8e4f5;--grid-strong:#b9cceb;--shadow:0 8px 26px rgba(34,65,110,.07);
+  --row-alt:#fbfdff;--row-hover:#f0f6ff;--th-bg:#f0f5ff;--row-line:#e2ebf8;--first-col:#bfd3f3;
+  --chip-bg:#edf1f7;--chip-text:#40516c;--no-bg:#f0f2f6;--no-text:#68778e;--field-bg:#fff;--btn-hover:#f1f5fc;
+  --demo-bg:#fff8e9;--demo-border:#f0dfb7;--demo-text:#765b20;--tab-text:#40516e;--close-bg:#edf1f7;
+  --soft:#f8faff;--notice-bg:#eef4ff;--notice-border:#cbdcf9;--notice-text:#31558e;--label-ink:#43536b;--section-ink:#72819a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;transition: background 0.3s, color 0.3s}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{max-width:1600px;margin:0 auto;padding:24px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:14px;flex-wrap:wrap}
+
+/* ======= НИКНЕЙМ ======= */
+.top-left{display:flex;align-items:center;gap:10px}
+.nick-text{
+  font-size:26px;font-weight:800;letter-spacing:-.4px;
+  background:transparent;border:1px solid transparent;color:inherit;
+  padding:2px 6px;border-radius:6px;outline:none;width:160px;
+  transition:all 0.2s;font-family:inherit;
+}
+.nick-text:hover{border-color:var(--line);background:var(--panel)}
+.nick-text:focus{border-color:var(--accent);background:var(--panel);box-shadow:0 0 0 2px var(--accent2)}
+.nick-color{
+  width:22px;height:22px;padding:0;border:none;border-radius:50%;
+  cursor:pointer;background:transparent;opacity:0.4;transition:all 0.2s;
+  -webkit-appearance:none;vertical-align:middle;
+}
+.nick-color::-webkit-color-swatch-wrapper{padding:0}
+.nick-color::-webkit-color-swatch{border:1px solid var(--line);border-radius:50%}
+.nick-color:hover,.nick-color:focus{opacity:1;transform:scale(1.15)}
+
+.top-right{display:flex;align-items:center;gap:10px}
+.btn-settings{font-size:22px;padding:6px 10px;border-radius:10px;line-height:1;background:var(--panel);border:1px solid var(--line);color:var(--ink);transition:0.2s}
+.btn-settings:hover{background:var(--btn-hover);transform:rotate(30deg)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--tab-text);padding:10px 15px;border-radius:10px;font-weight:650}
+.tab.active{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0;flex-wrap:wrap}
+.toolbar h2{margin:0;font-size:19px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:9px 13px;border-radius:9px;font-weight:650;transition:0.2s}
+.btn:hover{background:var(--btn-hover)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.small{padding:6px 9px;font-size:12px}
+a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:12px;margin:14px 0 18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px;box-shadow:var(--shadow)}
+.stat .num{font-size:25px;font-weight:760;letter-spacing:-.6px}
+.stat .label{color:var(--muted);font-size:12px;margin-top:2px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.panel-head{padding:15px 17px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.panel-head h3{margin:0;font-size:15px}
+.panel-head p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.search{width:min(320px,100%);padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--field-bg);color:var(--ink)}
+.table-scroll{overflow:auto}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:1280px;table-layout:fixed}
+th,td{padding:13px 14px;text-align:left;vertical-align:top;border-right:1px solid var(--grid);border-bottom:1px solid var(--row-line)}
+th:last-child,td:last-child{border-right:0}
+th{background:var(--th-bg);color:var(--ink);font-size:12px;text-transform:uppercase;letter-spacing:.045em;white-space:nowrap;position:sticky;top:0;z-index:1;border-right-color:var(--grid-strong);border-bottom:1px solid var(--grid-strong)}
+td{font-size:13px}
+tbody tr:nth-child(even) td{background:var(--row-alt)}
+tbody tr:hover td{background:var(--row-hover)}
+tbody td:first-child{box-shadow:inset 2px 0 0 var(--first-col)}
+.idcell{font-weight:760;overflow-wrap:anywhere}
+.muted{color:var(--muted)}
+
+.col-id{width:8%}
+.col-pass{width:7%}
+.col-status{width:12%}
+.col-totp{width:12%}
+.col-banks{width:10%}
+.col-sims{width:26%}
+.col-verif{width:10%}
+.col-note{width:7%}
+.col-actions{width:8%}
+
+.chips{display:flex;gap:5px;flex-wrap:wrap;min-width:0}
+td.col-sims .chips{max-width:none}
+td.col-banks .chips,td.col-verif .chips{max-width:100%}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:7px;background:var(--chip-bg);color:var(--chip-text);font-size:11px;white-space:normal;overflow-wrap:anywhere;word-break:break-word;max-width:100%}
+.chip.yes{background:var(--greenbg);color:var(--green)}
+.chip.no{background:var(--no-bg);color:var(--no-text)}
+.status{display:inline-flex;align-items:center;padding:5px 9px;border-radius:8px;font-weight:700;font-size:12px;white-space:nowrap}
+.status.active{background:var(--greenbg);color:var(--green)}
+.status.block{background:var(--redbg);color:var(--red)}
+.status.fraud{background:var(--amberbg);color:var(--amber)}
+.status-timer{margin-top:6px;display:flex;flex-direction:column;gap:1px}
+.timer{font-variant-numeric:tabular-nums;font-weight:750;white-space:nowrap;color:var(--amber)}
+
+.copy-cell{background:transparent;border:0;padding:4px 6px;margin:-4px -6px;border-radius:7px;cursor:pointer;text-align:left;color:inherit;transition:.15s;user-select:none;display:block;width:calc(100% + 12px)}
+.copy-cell:hover{background:var(--accent2)}
+.copy-cell:active{transform:scale(.99)}
+
+.totp-cell{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:transparent;border:0;padding:4px 6px;margin:-4px -6px;border-radius:7px;cursor:pointer;text-align:left;color:inherit;transition:.15s;user-select:none;width:calc(100% + 12px)}
+.totp-cell:hover{background:var(--accent2)}
+.totp-cell:active{transform:scale(.99)}
+.totp-cell .totp-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:18px;font-weight:760;letter-spacing:.08em;color:var(--accent);line-height:1.15}
+.totp-cell .totp-meta{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)}
+.totp-cell .totp-rem{font-variant-numeric:tabular-nums;font-weight:700}
+.totp-cell .totp-rem.warn{color:var(--amber)}
+.totp-cell .totp-rem.crit{color:var(--red)}
+.totp-cell .totp-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.empty{padding:44px 20px;text-align:center;color:var(--muted)}
+.empty strong{display:block;color:var(--ink);margin-bottom:5px}
+.list{display:grid;gap:10px;padding:15px}
+.item{border:1px solid var(--line);border-radius:11px;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.item strong{display:block}
+.item small{display:block;color:var(--muted);margin-top:3px}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field.full{grid-column:1/-1}
+.field label{font-size:12px;font-weight:700;color:var(--label-ink)}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 11px;background:var(--field-bg);color:var(--ink)}
+.field textarea{min-height:74px;resize:vertical}
+.hint{font-size:11px;color:var(--muted)}
+.bank-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.bank-row{border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 130px;align-items:center;gap:10px}
+.bank-row label{font-size:13px;font-weight:650;overflow-wrap:anywhere}
+
+/* ======= ДВА СТОЛБЦА ДЛЯ SIM ======= */
+.sim-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.sim-col { display: flex; flex-direction: column; gap: 8px; }
+.sim-item-box { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; transition: .2s; background: var(--field-bg); }
+.sim-item-box.active { border-color: var(--accent); background: var(--accent2); }
+.sim-item-box label { display: flex; align-items: center; gap: 8px; cursor: pointer; margin: 0; font-size: 13px; font-weight: 600; color: var(--ink); }
+.sim-item-box input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--accent); }
+.sim-meta-inputs { display: flex; gap: 10px; align-items: center; padding-left: 24px; flex-wrap: wrap; }
+.sim-meta-inputs.hidden { display: none; }
+.sim-meta-inputs label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: var(--muted); cursor: default; }
+.sim-meta-inputs input[type="number"] { width: 50px; padding: 3px 6px; border-radius: 6px; border: 1px solid var(--line); font-size: 12px; }
+.sim-meta-inputs input[type="datetime-local"] { padding: 3px 6px; border-radius: 6px; border: 1px solid var(--line); font-size: 11px; color: var(--ink); }
+
+/* Стили для отображения SIM в таблице */
+.sim-chip { display: flex; flex-direction: column; background: var(--chip-bg); border-radius: 8px; padding: 6px 10px; gap: 2px; border: 1px solid var(--line); width: 100%; max-width: 280px; }
+.sim-chip .chip { background: transparent; padding: 0; font-weight: 700; color: var(--ink); white-space: normal; }
+.sim-meta-info { font-size: 11px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+.sim-meta-info b { color: var(--accent); }
+
+.totp-add-box,.totp-preview{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.totp-add-box .inline{display:flex;gap:8px}
+.totp-add-box .inline input{flex:1}
+.totp-current{background:var(--panel);border:1px dashed var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px}
+.totp-current .lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.totp-preview-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.totp-preview-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:30px;font-weight:760;letter-spacing:.14em;color:var(--accent);line-height:1.1}
+.totp-preview-meta{display:flex;gap:14px;align-items:center;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.totp-preview-meta .totp-rem{font-weight:700;font-variant-numeric:tabular-nums}
+.totp-preview-meta .totp-rem.warn{color:var(--amber)}
+.totp-preview-meta .totp-rem.crit{color:var(--red)}
+.totp-preview-secret{font-family:ui-monospace,monospace;font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+.totp-empty-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+.dialog{border:0;border-radius:16px;padding:0;width:min(760px,calc(100% - 28px));max-height:90vh;box-shadow:0 24px 90px rgba(15,23,42,.28);background:var(--panel);color:var(--ink)}
+.dialog::backdrop{background:rgba(14,20,34,.48)}
+.dialog-inner{padding:20px}
+.dialog-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
+.dialog-head h3{font-size:19px;margin:0;overflow-wrap:anywhere}
+.close{border:0;background:var(--close-bg);color:var(--ink);width:32px;height:32px;border-radius:8px;font-size:18px}
+.dialog-body{max-height:66vh;overflow:auto;padding:1px 3px 5px 1px}
+.dialog-actions{display:flex;justify-content:space-between;gap:8px;margin-top:17px;padding-top:14px;border-top:1px solid var(--line)}
+.section-title{font-size:12px;font-weight:800;text-transform:uppercase;color:var(--section-ink);letter-spacing:.06em;margin:8px 0}
+.notice{padding:12px 14px;border:1px solid var(--notice-border);background:var(--notice-bg);color:var(--notice-text);border-radius:10px;font-size:12px}
+.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.detail-card{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:11px}
+.detail-card small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+.detail-card strong{font-size:14px;overflow-wrap:anywhere}
+.hidden{display:none!important}
+
+.copy-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#fff;padding:10px 18px;border-radius:10px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:90vw;overflow-wrap:anywhere}
+.copy-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Настройки */
+.theme-color-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
+.theme-color-item{display:flex;align-items:center;gap:10px;background:var(--field-bg);border:1px solid var(--line);padding:10px 14px;border-radius:10px}
+.theme-color-item label{flex:1;font-size:13px;font-weight:600;margin:0}
+.theme-color-item input[type="color"]{width:36px;height:36px;padding:0;border:none;border-radius:8px;cursor:pointer;background:transparent}
+.theme-color-item input[type="color"]::-webkit-color-swatch-wrapper{padding:0}
+.theme-color-item input[type="color"]::-webkit-color-swatch{border:1px solid var(--line);border-radius:8px}
+
+@media(max-width:760px){
+  .app{padding:14px}
+  .top{flex-direction:column}
+  .top-right{align-items:flex-start;width:100%}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .toolbar{align-items:flex-start;flex-direction:column}
+  .form-grid,.bank-grid,.detail-grid,.theme-color-grid,.sim-columns{grid-template-columns:1fr}
+  .bank-row{grid-template-columns:1fr 120px}
+  .panel-head{align-items:flex-start;flex-direction:column}
+  .search{width:100%}
+  table{min-width:1240px}
+  .nick-text{width:120px;font-size:22px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="top-left">
+      <input id="nickInput" class="nick-text" type="text" maxlength="20" placeholder="Flemvex" value="Flemvex" autocomplete="off" spellcheck="false" title="Нажмите, чтобы изменить ник">
+      <input id="nickColor" class="nick-color" type="color" value="#3974dc" title="Цвет ника">
+    </div>
+    <div class="top-right">
+      <button class="btn-settings" id="themeBtn" title="Настройки">⚙️</button>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Разделы">
+    <button class="tab active" data-tab="records">Записи</button>
+    <button class="tab" data-tab="operators">Операторы</button>
+    <button class="tab" data-tab="banks">Банки</button>
+    <button class="tab" data-tab="verifications">Верификация</button>
+    <button class="tab" data-tab="backup">Импорт / экспорт JSON</button>
+  </nav>
+
+  <main>
+    <section id="view-records">
+      <div class="toolbar">
+        <div>
+          <h2>Тестовые записи</h2>
+        </div>
+        <div class="actions">
+          <a href="https://t.me/Flemvex" target="_blank" rel="noopener noreferrer" class="btn">💖 Поддержать автора</a>
+          <button class="btn primary" id="addRecord">＋ Добавить запись</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="num" id="statTotal">0</div><div class="label">Всего записей</div></div>
+        <div class="stat"><div class="num" id="statFraud">0</div><div class="label">Фрод КД</div></div>
+        <div class="stat"><div class="num" id="statBlocked">0</div><div class="label">Заблокировано</div></div>
+        <div class="stat"><div class="num" id="statActive">0</div><div class="label">Активно</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div><h3>Таблица записей</h3></div>
+          <input class="search" id="recordSearch" placeholder="Поиск по ID или заметке…" aria-label="Поиск">
+        </div>
+        <div class="table-scroll" id="recordsTableWrap"></div>
+      </div>
+    </section>
+
+    <section id="view-operators" class="hidden">
+      <div class="toolbar">
+        <div><h2>Операторы SIM</h2><div class="muted" style="font-size:12px;margin-top:3px">У каждого оператора доступны два варианта: физическая SIM и eSIM.</div></div>
+        <button class="btn primary" id="addOperator">＋ Добавить оператора</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Список операторов</h3><p>Можно добавлять, переименовывать и удалять варианты.</p></div></div>
+        <div class="list" id="operatorsList"></div>
+      </div>
+    </section>
+
+    <section id="view-banks" class="hidden">
+      <div class="toolbar">
+        <div><h2>Банки и сервисы</h2><div class="muted" style="font-size:12px;margin-top:3px">Список используется в карточке каждой тестовой записи для статуса «Есть / Нет / Не указано».</div></div>
+        <button class="btn primary" id="addBank">＋ Добавить банк / сервис</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Справочник банков и сервисов</h3><p>Изменения появятся в карточках записей.</p></div></div>
+        <div class="list" id="banksList"></div>
+      </div>
+    </section>
+
+    <section id="view-verifications" class="hidden">
+      <div class="toolbar">
+        <div><h2>Верификация</h2><div class="muted" style="font-size:12px;margin-top:3px">Список используется в карточке каждой тестовой записи для статуса «Пройдена / Не пройдена / Не указано».</div></div>
+        <button class="btn primary" id="addVerification">＋ Добавить верификацию</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div><h3>Справочник верификаций</h3><p>Изменения появятся в карточках записей.</p></div></div>
+        <div class="list" id="verificationsList"></div>
+      </div>
+    </section>
+
+    <section id="view-backup" class="hidden">
+      <div class="toolbar">
+        <div><h2>Импорт / экспорт JSON</h2><div class="muted" style="font-size:12px;margin-top:3px">Резервная копия содержит тестовые записи, операторов, банки и верификации.</div></div>
+      </div>
+      <div class="panel" style="padding:18px;display:grid;gap:14px;max-width:760px">
+        <div class="notice">Данные этой панели не отправляются на сервер. Экспортируйте резервную копию, чтобы перенести её в другой браузер. Не загружайте реальные персональные или банковские данные.</div>
+        <div>
+          <strong>Экспорт</strong>
+          <p class="muted" style="font-size:12px;margin:4px 0 10px">Скачать текущие тестовые данные в JSON.</p>
+          <button class="btn primary" id="exportJson">Скачать резервную копию</button>
+        </div>
+        <hr style="border:0;border-top:1px solid var(--line);width:100%">
+        <div>
+          <strong>Импорт</strong>
+          <p class="muted" style="font-size:12px;margin:4px 0 10px">Загрузить ранее созданную резервную копию. Текущие данные будут заменены.</p>
+          <input type="file" id="importFile" accept="application/json,.json">
+          <div style="margin-top:10px"><button class="btn" id="importJson">Импортировать выбранный файл</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<dialog class="dialog" id="themeDialog">
+  <div class="dialog-inner">
+    <div class="dialog-head">
+      <h3>Настройки</h3>
+      <button class="close" data-close="themeDialog" aria-label="Закрыть">×</button>
+    </div>
+    
+    <div class="section-title">Цвета интерфейса</div>
+    <div class="theme-color-grid">
+      <div class="theme-color-item"><label for="thBg">Фон страницы</label><input type="color" id="thBg" value="#f6f9ff"></div>
+      <div class="theme-color-item"><label for="thPanel">Фон панелей</label><input type="color" id="thPanel" value="#ffffff"></div>
+      <div class="theme-color-item"><label for="thInk">Основной текст</label><input type="color" id="thInk" value="#202b3b"></div>
+      <div class="theme-color-item"><label for="thAccent">Акцентный цвет</label><input type="color" id="thAccent" value="#3974dc"></div>
+      <div class="theme-color-item"><label for="thLine">Границы</label><input type="color" id="thLine" value="#dfe7f2"></div>
+      <div class="theme-color-item"><label for="thSoft">Мягкий фон (чипы)</label><input type="color" id="thSoft" value="#f8faff"></div>
+    </div>
+
+    <div class="section-title" style="margin-top:24px">Дата обновления SIM по умолчанию</div>
+    
+    <div class="field">
+      <label for="dateModeSelect">Режим даты</label>
+      <select id="dateModeSelect">
+        <option value="system">Системная (текущая при сохранении)</option>
+        <option value="custom">Задать вручную</option>
+      </select>
+    </div>
+    
+    <div class="field hidden" id="customDateWrap" style="margin-top:10px;">
+      <label for="actualDateInput">Выберите дату</label>
+      <input type="datetime-local" id="actualDateInput">
+      <span class="hint">Эта дата будет подставляться по умолчанию при добавлении новых SIM в записи.</span>
+    </div>
+
+    <div class="dialog-actions" style="justify-content: space-between; margin-top: 20px;">
+      <button type="button" class="btn" id="themeReset">Сбросить цвета</button>
+      <button type="button" class="btn primary" data-close="themeDialog">Готово</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="dialog" id="recordDialog">
+  <div class="dialog-inner">
+    <div class="dialog-head">
+      <div>
+        <h3 id="recordDialogTitle">Новая запись</h3>
+      </div>
+      <button class="close" data-close="recordDialog" aria-label="Закрыть">×</button>
+    </div>
+    <form id="recordForm">
+      <div class="dialog-body" id="recordFormBody"></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn" data-close="recordDialog">Отмена</button>
+        <button class="btn primary" type="submit">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="dialog" id="simpleDialog">
+  <div class="dialog-inner">
+    <div class="dialog-head">
+      <h3 id="simpleDialogTitle">Добавить</h3>
+      <button class="close" data-close="simpleDialog" aria-label="Закрыть">×</button>
+    </div>
+    <form id="simpleForm">
+      <div class="dialog-body" id="simpleFormBody"></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn" data-close="simpleDialog">Отмена</button>
+        <button class="btn primary" type="submit">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<div class="copy-toast" id="copyToast">Скопировано</div>
+
+<script>
+(() => {
+'use strict';
+const STORE_KEY = 'qa_sim_panel_72h_v1';
+const THEME_KEY = 'qa_sim_panel_theme_v4';
+const SETTINGS_KEY = 'qa_sim_panel_settings_v1';
+const NICK_KEY = 'qa_sim_panel_nick_v1';
+const COOLDOWN_MS = 72 * 60 * 60 * 1000;
+const TOTP_PERIOD = 30;
+const TOTP_DIGITS = 6;
+const DEFAULT_OPERATORS = ['Миранда','Волна Мобайл','Мотив','МегаФон','МТС','T2','Билайн','СберМобайл','ГазпромМобайл','Добросвязь','7телеком','Йота','Экомобайл','Ростелеком','Next Mobile','Телетай','qiq'];
+const DEFAULT_BANKS = ['Яндекс Пэй','Wildberries','Ozon','ПСБ'];
+const DEFAULT_VERIFICATIONS = ['Документ','Селфи','Видеозвонок'];
+const uid = () => (crypto && crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now().toString(36) + Math.random().toString(36).slice(2));
+const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+/* ================== TOTP ENGINE ================== */
+function rotl(x, n){ return ((x << n) | (x >>> (32 - n))) >>> 0; }
+function sha1(bytes){
+  const ml = bytes.length * 8;
+  const total = ((bytes.length + 8) >> 6) * 64 + 64;
+  const buf = new Uint8Array(total); buf.set(bytes); buf[bytes.length] = 0x80;
+  const view = new DataView(buf.buffer);
+  view.setUint32(total - 4, ml >>> 0, false);
+  view.setUint32(total - 8, Math.floor(ml / 0x100000000) >>> 0, false);
+  let h0=0x67452301, h1=0xEFCDAB89, h2=0x98BADCFE, h3=0x10325476, h4=0xC3D2E1F0;
+  const w = new Uint32Array(80);
+  for (let i = 0; i < total; i += 64){
+    for (let j = 0; j < 16; j++) w[j] = view.getUint32(i + j * 4, false);
+    for (let j = 16; j < 80; j++) w[j] = rotl(w[j-3] ^ w[j-8] ^ w[j-14] ^ w[j-16], 1);
+    let a=h0,b=h1,c=h2,d=h3,e=h4;
+    for (let j = 0; j < 80; j++){
+      let f,k;
+      if (j<20){ f=(b&c)|((~b)&d); k=0x5A827999; }
+      else if (j<40){ f=b^c^d; k=0x6ED9EBA1; }
+      else if (j<60){ f=(b&c)|(b&d)|(c&d); k=0x8F1BBCDC; }
+      else { f=b^c^d; k=0xCA62C1D6; }
+      const t = (rotl(a,5)+f+e+k+w[j])>>>0;
+      e=d; d=c; c=rotl(b,30); b=a; a=t;
+    }
+    h0=(h0+a)>>>0; h1=(h1+b)>>>0; h2=(h2+c)>>>0; h3=(h3+d)>>>0; h4=(h4+e)>>>0;
+  }
+  const out = new Uint8Array(20); const ov = new DataView(out.buffer);
+  ov.setUint32(0,h0,false); ov.setUint32(4,h1,false); ov.setUint32(8,h2,false); ov.setUint32(12,h3,false); ov.setUint32(16,h4,false);
+  return out;
+}
+function hmacSha1(keyBytes, msgBytes){
+  let k = keyBytes; if (k.length > 64) k = sha1(k);
+  const kk = new Uint8Array(64); kk.set(k);
+  const ipad = new Uint8Array(64), opad = new Uint8Array(64);
+  for (let i = 0; i < 64; i++){ ipad[i] = kk[i] ^ 0x36; opad[i] = kk[i] ^ 0x5C; }
+  const inner = new Uint8Array(64 + msgBytes.length); inner.set(ipad); inner.set(msgBytes, 64);
+  const innerHash = sha1(inner);
+  const outer = new Uint8Array(64 + 20); outer.set(opad); outer.set(innerHash, 64);
+  return sha1(outer);
+}
+const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function base32Decode(str){
+  const clean = String(str || '').replace(/[\s\-=]/g, '').toUpperCase();
+  let bits = 0, value = 0; const out = [];
+  for (const ch of clean){
+    const idx = B32.indexOf(ch); if (idx < 0) continue;
+    value = (value << 5) | idx; bits += 5;
+    if (bits >= 8){ out.push((value >>> (bits - 8)) & 0xFF); bits -= 8; }
+  }
+  return new Uint8Array(out);
+}
+function base32Encode(bytes){
+  let bits = 0, value = 0, out = '';
+  for (const b of bytes){
+    value = (value << 8) | b; bits += 8;
+    while (bits >= 5){ out += B32[(value >>> (bits - 5)) & 31]; bits -= 5; }
+  }
+  if (bits > 0) out += B32[(value << (5 - bits)) & 31];
+  return out;
+}
+function totpCode(secretB32){
+  const key = base32Decode(secretB32);
+  if (!key.length) return '------';
+  const counter = Math.floor(Date.now() / 1000 / TOTP_PERIOD);
+  const msg = new Uint8Array(8); let c = counter;
+  for (let i = 7; i >= 0; i--){ msg[i] = c & 0xFF; c = Math.floor(c / 256); }
+  const h = hmacSha1(key, msg);
+  const off = h[h.length - 1] & 0x0F;
+  const code = (((h[off] & 0x7F) << 24) | ((h[off+1] & 0xFF) << 16) | ((h[off+2] & 0xFF) << 8) | (h[off+3] & 0xFF)) >>> 0;
+  return String(code % Math.pow(10, TOTP_DIGITS)).padStart(TOTP_DIGITS, '0');
+}
+function totpRemaining(){ return TOTP_PERIOD - (Math.floor(Date.now() / 1000) % TOTP_PERIOD); }
+function genSecret(){
+  const b = new Uint8Array(20);
+  if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(b);
+  else for (let i = 0; i < b.length; i++) b[i] = Math.floor(Math.random() * 256);
+  return base32Encode(b);
+}
+function formatCode(code){
+  if (!code || code.length < TOTP_DIGITS) return code;
+  return code.slice(0, 3) + ' ' + code.slice(3);
+}
+function maskSecret(s){
+  const c = String(s || '').replace(/[\s\-=]/g, '').toUpperCase();
+  return c.length <= 6 ? c : c.slice(0, 4) + '…' + c.slice(-4);
+}
+function parseTotpInput(raw){
+  const s = String(raw || '').trim();
+  if (!s) return null;
+  if (s.toLowerCase().startsWith('otpauth://')){
+    try {
+      const u = new URL(s);
+      const label = decodeURIComponent(u.pathname.replace(/^\/+/, ''));
+      let issuer = u.searchParams.get('issuer') || '';
+      let name = label;
+      if (label.includes(':')){
+        const [pre, ...rest] = label.split(':');
+        if (!issuer) issuer = pre.trim();
+        name = rest.join(':').trim();
+      }
+      const secret = (u.searchParams.get('secret') || '').toUpperCase().replace(/[\s\-=]/g, '');
+      if (!secret || !/^[A-Z2-7]+$/.test(secret)) return null;
+      return { secret, issuer: issuer.trim(), label: (name || issuer || 'TOTP').trim() };
+    } catch(e){ return null; }
+  }
+  const clean = s.toUpperCase().replace(/[\s\-=]/g, '');
+  if (!/^[A-Z2-7]+$/.test(clean) || clean.length < 16) return null;
+  return { secret: clean, issuer: '', label: 'TOTP' };
+}
+/* ============================================================ */
+
+let data = loadData();
+let globalSettings = { actualDate: 'SYSTEM' };
+let formTotp = null;
+let formPrevTotp = null;
+let formTotpAdding = false;
+
+function getDefaultSimDate() {
+  if (globalSettings.actualDate === 'SYSTEM' || !globalSettings.actualDate) {
+    return new Date().toISOString();
+  }
+  return new Date(globalSettings.actualDate).toISOString();
+}
+
+function getDefaultSimDateLocal() {
+  if (globalSettings.actualDate === 'SYSTEM' || !globalSettings.actualDate) {
+    return toLocalInput(new Date().toISOString());
+  }
+  return toLocalInput(globalSettings.actualDate);
+}
+
+function initNick(){
+  let nick = 'Flemvex';
+  let color = '#3974dc';
+  try {
+    const raw = localStorage.getItem(NICK_KEY);
+    if (raw){
+      const p = JSON.parse(raw);
+      if (typeof p.nick === 'string' && p.nick) nick = p.nick;
+      if (typeof p.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(p.color)) color = p.color;
+    }
+  } catch(e){}
+  const inp = document.getElementById('nickInput');
+  const col = document.getElementById('nickColor');
+  inp.value = nick;
+  col.value = color;
+  inp.style.color = color;
+  const update = () => {
+    inp.style.color = col.value;
+    try { localStorage.setItem(NICK_KEY, JSON.stringify({ nick: inp.value.trim(), color: col.value })); } catch(e){}
+  };
+  inp.addEventListener('input', update);
+  col.addEventListener('input', update);
+}
+
+const THEME_KEYS = { thBg: '--bg', thPanel: '--panel', thInk: '--ink', thAccent: '--accent', thLine: '--line', thSoft: '--soft' };
+const DEFAULT_THEME = { thBg: '#f6f9ff', thPanel: '#ffffff', thInk: '#202b3b', thAccent: '#3974dc', thLine: '#dfe7f2', thSoft: '#f8faff' };
+
+function applyTheme(themeObj) {
+  Object.keys(THEME_KEYS).forEach(id => {
+    const val = themeObj[id] || DEFAULT_THEME[id];
+    document.documentElement.style.setProperty(THEME_KEYS[id], val);
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function toLocalDateTimeString(date) {
+  const z = n => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${z(date.getMonth()+1)}-${z(date.getDate())}T${z(date.getHours())}:${z(date.getMinutes())}`;
+}
+
+function initSettings(){
+  try {
+    const raw = localStorage.getItem(THEME_KEY);
+    if (raw) applyTheme(JSON.parse(raw)); else applyTheme(DEFAULT_THEME);
+  } catch(e) { applyTheme(DEFAULT_THEME); }
+
+  try {
+    const rawS = localStorage.getItem(SETTINGS_KEY);
+    if (rawS) {
+      const s = JSON.parse(rawS);
+      if (s.actualDate) globalSettings.actualDate = s.actualDate;
+    }
+  } catch(e){}
+
+  const modeSelect = document.getElementById('dateModeSelect');
+  const customWrap = document.getElementById('customDateWrap');
+  const dateInput = document.getElementById('actualDateInput');
+
+  if (globalSettings.actualDate === 'SYSTEM' || !globalSettings.actualDate) {
+    modeSelect.value = 'system';
+    customWrap.classList.add('hidden');
+  } else {
+    modeSelect.value = 'custom';
+    customWrap.classList.remove('hidden');
+    dateInput.value = globalSettings.actualDate;
+  }
+
+  modeSelect.addEventListener('change', (e) => {
+    if (e.target.value === 'system') {
+      globalSettings.actualDate = 'SYSTEM';
+      customWrap.classList.add('hidden');
+    } else {
+      customWrap.classList.remove('hidden');
+      if (!dateInput.value) dateInput.value = toLocalDateTimeString(new Date());
+      globalSettings.actualDate = dateInput.value;
+    }
+    saveSettings();
+  });
+
+  dateInput.addEventListener('change', (e) => {
+    globalSettings.actualDate = e.target.value;
+    saveSettings();
+  });
+
+  document.getElementById('themeBtn').addEventListener('click', () => { document.getElementById('themeDialog').showModal(); });
+  document.getElementById('themeReset').addEventListener('click', () => { applyTheme(DEFAULT_THEME); localStorage.removeItem(THEME_KEY); });
+  Object.keys(THEME_KEYS).forEach(id => {
+    document.getElementById(id).addEventListener('input', (e) => {
+      document.documentElement.style.setProperty(THEME_KEYS[id], e.target.value);
+      saveTheme();
+    });
+  });
+}
+function saveTheme(){ const obj = {}; Object.keys(THEME_KEYS).forEach(id => { const el = document.getElementById(id); if (el) obj[id] = el.value; }); try { localStorage.setItem(THEME_KEY, JSON.stringify(obj)); } catch(e){} }
+function saveSettings(){ try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(globalSettings)); } catch(e){} }
+
+function loadData(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.records) && Array.isArray(parsed.operators) && Array.isArray(parsed.banks)) return normalizeData(parsed);
+    }
+  } catch(e) { console.warn('Не удалось прочитать локальные данные', e); }
+  return { version: 1, operators: DEFAULT_OPERATORS.map(name => ({ id: uid(), name })), banks: DEFAULT_BANKS.map(name => ({ id: uid(), name })), verifications: DEFAULT_VERIFICATIONS.map(name => ({ id: uid(), name })), records: [] };
+}
+function normTotp(t){ if (!t || typeof t !== 'object') return null; const s = String(t.secret || '').toUpperCase().replace(/[\s\-=]/g, ''); if (!s || !/^[A-Z2-7]+$/.test(s)) return null; return { secret: s, issuer: String(t.issuer || ''), label: String(t.label || '') }; }
+
+function normalizeData(obj){
+  const operators = (obj.operators || []).map(x => ({ id: String(x.id || uid()), name: String(x.name || 'Оператор') }));
+  const banks = (obj.banks || []).map(x => ({ id: String(x.id || uid()), name: String(x.name || 'Сервис') }));
+  const verifications = Array.isArray(obj.verifications) ? obj.verifications.map(x => ({ id: String(x.id || uid()), name: String(x.name || 'Верификация') })) : DEFAULT_VERIFICATIONS.map(name => ({ id: uid(), name }));
+  
+  const records = (obj.records || []).filter(x => x && String(x.testId ?? '').trim() !== '').map(x => {
+    let totp = null;
+    if (x.totp) totp = normTotp(x.totp);
+    else if (typeof x.totpSecret === 'string' && x.totpSecret){
+      const s = String(x.totpSecret).toUpperCase().replace(/[\s\-=]/g,'');
+      if (/^[A-Z2-7]+$/.test(s)) totp = { secret: s, issuer: '', label: 'TOTP' };
+    }
+    const prevTotp = normTotp(x.prevTotp);
+    
+    const sims = Array.isArray(x.sims) ? x.sims.map(String) : [];
+    let simMeta = x.simMeta || {};
+    if (!x.simMeta && sims.length > 0) {
+      sims.forEach(s => {
+        simMeta[s] = { count: 1, date: x.simsUpdatedAt || x.createdAt || new Date().toISOString() };
+      });
+    }
+
+    return {
+      id: String(x.id || uid()),
+      testId: String(x.testId).trim(),
+      passwordLabel: String(x.passwordLabel || ''),
+      status: ['active','blocked','fraud'].includes(x.status) ? x.status : 'active',
+      cooldownStart: x.cooldownStart ? String(x.cooldownStart) : '',
+      cooldownEnd: x.cooldownEnd ? String(x.cooldownEnd) : '',
+      sims,
+      simMeta,
+      bankStates: (x.bankStates && typeof x.bankStates === 'object') ? x.bankStates : {},
+      verifStates: (x.verifStates && typeof x.verifStates === 'object') ? x.verifStates : {},
+      totp, prevTotp,
+      note: String(x.note || ''),
+      createdAt: x.createdAt || new Date().toISOString(),
+      updatedAt: x.updatedAt || new Date().toISOString()
+    };
+  });
+  return { version: 1, operators, banks, verifications, records };
+}
+
+function save(){ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+function statusLabel(s){ return s==='fraud'?'Фрод КД':s==='blocked'?'Блок':'Активен'; }
+function statusClass(s){ return s==='fraud'?'fraud':s==='blocked'?'block':'active'; }
+function fmtDate(value){ if(!value) return '—'; const d = new Date(value); return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('ru-RU',{dateStyle:'short',timeStyle:'short'}); }
+function toLocalInput(value){ if(!value) return ''; const d = new Date(value); if(Number.isNaN(d.getTime())) return ''; const z = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
+function remaining(end){ const ms = new Date(end).getTime() - Date.now(); if(!Number.isFinite(ms)) return 'Не задано'; if(ms <= 0) return 'Завершён'; const sec = Math.floor(ms/1000), h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60; return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+function normalizeTimers(){ let changed = false; const now = Date.now(); for(const r of data.records){ if(r.status === 'fraud' && r.cooldownEnd && new Date(r.cooldownEnd).getTime() <= now){ r.status = 'active'; r.updatedAt = new Date().toISOString(); changed = true; } } if(changed) save(); return changed; }
+function simLabel(value){ const [opId, kind] = String(value).split('|'); const op = data.operators.find(o => o.id === opId); return `${op ? op.name : 'Удалённый оператор'} · ${kind === 'esim' ? 'eSIM' : 'Физ.'}`; }
+function verifLabel(st){ return st === 'yes' ? 'пройдена' : st === 'no' ? 'не пройдена' : '—'; }
+function totpRemClass(rem){ return rem <= 5 ? 'crit' : rem <= 10 ? 'warn' : ''; }
+
+let toastTimer = null;
+function copyText(txt){ try { if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).catch(()=>{}); return; } } catch(e){} const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e){} ta.remove(); }
+function showCopiedToast(msg){ const el = document.getElementById('copyToast'); if (!el) return; if (msg) el.textContent = msg; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1400); }
+
+function renderAll(){ normalizeTimers(); renderRecords(); renderStats(); renderOperators(); renderBanks(); renderVerifications(); }
+function renderStats(){
+  document.getElementById('statTotal').textContent = data.records.length;
+  document.getElementById('statFraud').textContent = data.records.filter(r => r.status === 'fraud').length;
+  document.getElementById('statBlocked').textContent = data.records.filter(r => r.status === 'blocked').length;
+  document.getElementById('statActive').textContent = data.records.filter(r => r.status === 'active').length;
+}
+function renderRecords(){
+  const q = document.getElementById('recordSearch').value.trim().toLowerCase();
+  const rows = data.records.filter(r => r.testId.toLowerCase().includes(q) || r.note.toLowerCase().includes(q)).sort((a,b) => a.testId.localeCompare(b.testId,'ru'));
+  const wrap = document.getElementById('recordsTableWrap');
+  if(!rows.length){
+    wrap.innerHTML = `<div class="empty"><strong>${data.records.length ? 'Ничего не найдено' : 'Пока нет тестовых записей'}</strong>${data.records.length ? 'Измените запрос поиска.' : 'Нажмите «Добавить запись», чтобы создать новую запись.'}</div>`;
+    return;
+  }
+  const body = rows.map(r => {
+    const simChips = r.sims.map(v => {
+      const meta = r.simMeta && r.simMeta[v] ? r.simMeta[v] : { count: 1, date: r.createdAt };
+      return `<div class="sim-chip">
+        <div class="chip">${esc(simLabel(v))}</div>
+        <div class="sim-meta-info">Кол-во: <b>${meta.count}</b> · Обновлено: ${meta.date ? fmtDate(meta.date) : '—'}</div>
+      </div>`;
+    }).join('');
+    const sim = r.sims.length ? simChips : '<span class="muted">Не выбрано</span>';
+    
+    const bankChips = data.banks.map(b => { const st = r.bankStates[b.id] || 'unknown'; return `<span class="chip ${st === 'yes' ? 'yes' : st === 'no' ? 'no' : ''}">${esc(b.name)}: ${st === 'yes' ? 'есть' : st === 'no' ? 'нет' : '—'}</span>`; }).join('');
+    const verifChips = data.verifications.map(v => { const st = r.verifStates[v.id] || 'unknown'; return `<span class="chip ${st === 'yes' ? 'yes' : st === 'no' ? 'no' : ''}">${esc(v.name)}: ${verifLabel(st)}</span>`; }).join('');
+    
+    const statusCell = r.status === 'fraud' && r.cooldownEnd
+      ? `<span class="status fraud">${statusLabel(r.status)}</span><div class="status-timer"><span class="timer countdown" data-end="${esc(r.cooldownEnd)}">${remaining(r.cooldownEnd)}</span><span class="hint">до ${esc(fmtDate(r.cooldownEnd))}</span></div>`
+      : `<span class="status ${statusClass(r.status)}">${statusLabel(r.status)}</span>`;
+
+    const rem = totpRemaining();
+    const totpCell = r.totp
+      ? `<button type="button" class="totp-cell" data-copy-totp="${esc(r.id)}" title="Копировать код">
+           <span class="totp-code" data-totp="${esc(r.totp.secret)}">${formatCode(totpCode(r.totp.secret))}</span>
+           <span class="totp-meta"><span class="totp-rem ${totpRemClass(rem)}" data-totp-rem="1">↻ ${rem}с</span>${r.totp.label ? `<span class="totp-label">${esc(r.totp.label)}</span>` : ''}</span>
+         </button>`
+      : '<span class="muted">—</span>';
+
+    return `<tr>
+      <td class="col-id"><button type="button" class="copy-cell" data-copy-id="${esc(r.id)}" title="Копировать ID"><div class="idcell">${esc(r.testId)}</div><div class="hint">${esc(fmtDate(r.createdAt))}</div></button></td>
+      <td class="col-pass">${r.passwordLabel ? `<button type="button" class="copy-cell" data-copy-pass="${esc(r.id)}" title="Копировать пароль"><div>${esc(r.passwordLabel)}</div></button>` : '<span class="muted">—</span>'}</td>
+      <td class="col-status">${statusCell}</td>
+      <td class="col-totp">${totpCell}</td>
+      <td class="col-banks"><div class="chips">${bankChips || '<span class="muted">Нет сервисов</span>'}</div></td>
+      <td class="col-sims"><div class="chips">${sim}</div></td>
+      <td class="col-verif"><div class="chips">${verifChips || '<span class="muted">Нет верификаций</span>'}</div></td>
+      <td class="col-note">${r.note ? esc(r.note) : '<span class="muted">—</span>'}</td>
+      <td class="col-actions"><div class="row-actions"><button class="btn small" data-edit="${esc(r.id)}">Изменить</button></div></td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<table><colgroup><col class="col-id"><col class="col-pass"><col class="col-status"><col class="col-totp"><col class="col-banks"><col class="col-sims"><col class="col-verif"><col class="col-note"><col class="col-actions"></colgroup>
+    <thead><tr><th>ID записи</th><th>Пароль</th><th>Статус КД</th><th>TOTP</th><th>Банки / сервисы</th><th>Операторы SIM</th><th>Верификация</th><th>Заметка</th><th></th></tr></thead>
+    <tbody>${body}</tbody></table>`;
+}
+function renderOperators(){ const el = document.getElementById('operatorsList'); if(!data.operators.length){ el.innerHTML = '<div class="empty">Список операторов пуст.</div>'; return; } el.innerHTML = data.operators.map(o => `<div class="item"><div><strong>${esc(o.name)}</strong><small>Варианты: физическая SIM · eSIM</small></div><div class="actions"><button class="btn small" data-edit-operator="${esc(o.id)}">Переименовать</button><button class="btn small danger" data-delete-operator="${esc(o.id)}">Удалить</button></div></div>`).join(''); }
+function renderBanks(){ const el = document.getElementById('banksList'); if(!data.banks.length){ el.innerHTML = '<div class="empty">Список банков и сервисов пуст.</div>'; return; } el.innerHTML = data.banks.map(b => `<div class="item"><div><strong>${esc(b.name)}</strong><small>Статус доступен в каждой QA-записи: есть / нет / не указано</small></div><div class="actions"><button class="btn small" data-edit-bank="${esc(b.id)}">Переименовать</button><button class="btn small danger" data-delete-bank="${esc(b.id)}">Удалить</button></div></div>`).join(''); }
+function renderVerifications(){ const el = document.getElementById('verificationsList'); if(!data.verifications.length){ el.innerHTML = '<div class="empty">Список верификаций пуст.</div>'; return; } el.innerHTML = data.verifications.map(v => `<div class="item"><div><strong>${esc(v.name)}</strong><small>Статус доступен в каждой QA-записи: пройдена / не пройдена / не указано</small></div><div class="actions"><button class="btn small" data-edit-verification="${esc(v.id)}">Переименовать</button><button class="btn small danger" data-delete-verification="${esc(v.id)}">Удалить</button></div></div>`).join(''); }
+
+function renderTotpArea(){
+  const area = document.getElementById('totpArea');
+  if (!area) return;
+  if (formTotpAdding){
+    const rem = totpRemaining(); const cls = totpRemClass(rem);
+    const currentBlock = formTotp ? `<div class="totp-current"><span class="lbl">Текущий TOTP (будет заменён при сохранении)</span><span class="totp-code" data-totp="${esc(formTotp.secret)}">${formatCode(totpCode(formTotp.secret))}</span><span class="totp-rem ${cls}" data-totp-rem="1">↻ ${rem}с</span><span class="totp-preview-secret">Секрет: ${esc(formTotp.secret)}</span>${formTotp.issuer ? `<span class="totp-preview-secret">Issuer: ${esc(formTotp.issuer)}</span>` : ''}${formTotp.label ? `<span class="totp-preview-secret">Label: ${esc(formTotp.label)}</span>` : ''}</div>` : '';
+    const prevBlock = formPrevTotp ? `<div class="totp-preview-secret">Предыдущий (архив): ${esc(formPrevTotp.secret)}${formPrevTotp.label ? ' · ' + esc(formPrevTotp.label) : ''}</div>` : '';
+    area.innerHTML = `<div class="totp-add-box">${currentBlock}${prevBlock}<div class="field"><label for="totpInput">Новый секрет или otpauth:// ссылка</label><div class="inline"><input id="totpInput" autocomplete="off" spellcheck="false" placeholder="Base32 секрет или otpauth:// ссылка"><button type="button" class="btn" id="totpGen">Сгенерировать</button></div></div><div class="actions"><button type="button" class="btn primary" id="totpConfirm">${formTotp ? 'Заменить' : 'Добавить'}</button><button type="button" class="btn" id="totpCancel">Отмена</button></div></div>`;
+    setTimeout(() => document.getElementById('totpInput')?.focus(), 30);
+    return;
+  }
+  if (formTotp){
+    const rem = totpRemaining(); const cls = totpRemClass(rem);
+    area.innerHTML = `<div class="totp-preview"><div class="totp-preview-head"><div><div class="totp-preview-code" data-totp="${esc(formTotp.secret)}">${formatCode(totpCode(formTotp.secret))}</div><div class="totp-preview-meta"><span class="totp-rem ${cls}" data-totp-rem="1">↻ ${rem}с</span>${formTotp.label ? `<span>${esc(formTotp.label)}</span>` : ''}${formTotp.issuer ? `<span>${esc(formTotp.issuer)}</span>` : ''}</div></div><div class="actions"><button type="button" class="btn small" id="totpChange">Изменить</button><button type="button" class="btn small danger" id="totpRemove">Удалить</button></div></div><div class="totp-preview-secret">Секрет: ${esc(maskSecret(formTotp.secret))}</div>${formPrevTotp ? `<div class="totp-preview-secret">Предыдущий (архив): ${esc(maskSecret(formPrevTotp.secret))}</div>` : ''}</div>`;
+    return;
+  }
+  area.innerHTML = `<div class="totp-empty-row"><button type="button" class="btn" id="totpAdd">＋ Добавить TOTP</button></div>`;
+}
+
+function openRecord(id){
+  const r = id ? data.records.find(x => x.id === id) : null;
+  formTotp = r && r.totp ? { secret: r.totp.secret, issuer: r.totp.issuer || '', label: r.totp.label || '' } : null;
+  formPrevTotp = r && r.prevTotp ? { secret: r.prevTotp.secret, issuer: r.prevTotp.issuer || '', label: r.prevTotp.label || '' } : null;
+  formTotpAdding = false;
+
+  document.getElementById('recordDialogTitle').textContent = r ? 'Редактировать запись' : 'Новая запись';
+
+  const defaultDate = getDefaultSimDateLocal();
+  
+  const simHtml = data.operators.map(o => {
+    const physVal = `${esc(o.id)}|physical`;
+    const esimVal = `${esc(o.id)}|esim`;
+    const isPhys = r && r.sims.includes(physVal);
+    const isEsim = r && r.sims.includes(esimVal);
+    
+    const physMeta = r && r.simMeta ? r.simMeta[physVal] : null;
+    const esimMeta = r && r.simMeta ? r.simMeta[esimVal] : null;
+
+    const renderBox = (val, isChecked, meta, labelText) => {
+        const m = meta || { count: 1, date: defaultDate };
+        return `<div class="sim-item-box ${isChecked ? 'active' : ''}" data-sim-box="${val}">
+            <label>
+                <input type="checkbox" name="sims" value="${val}" ${isChecked ? 'checked' : ''}>
+                <span>${labelText}</span>
+            </label>
+            <div class="sim-meta-inputs ${isChecked ? '' : 'hidden'}">
+                <label>Кол-во <input type="number" min="1" value="${m.count}" data-sim-count="${val}"></label>
+                <label>Дата <input type="datetime-local" value="${m.date ? toLocalInput(m.date) : ''}" data-sim-date="${val}"></label>
+            </div>
+        </div>`;
+    };
+
+    return renderBox(physVal, isPhys, physMeta, `${esc(o.name)} · физ. SIM`) +
+           renderBox(esimVal, isEsim, esimMeta, `${esc(o.name)} · eSIM`);
+  }).join('');
+
+  const banksHtml = data.banks.map(b => `<div class="bank-row"><label for="bank_${esc(b.id)}">${esc(b.name)}</label><select id="bank_${esc(b.id)}" name="bank_${esc(b.id)}"><option value="unknown" ${!r || !r.bankStates[b.id] || r.bankStates[b.id] === 'unknown' ? 'selected' : ''}>Не указано</option><option value="yes" ${r && r.bankStates[b.id] === 'yes' ? 'selected' : ''}>Есть</option><option value="no" ${r && r.bankStates[b.id] === 'no' ? 'selected' : ''}>Нет</option></select></div>`).join('');
+  const verifHtml = data.verifications.map(v => `<div class="bank-row"><label for="verif_${esc(v.id)}">${esc(v.name)}</label><select id="verif_${esc(v.id)}" name="verif_${esc(v.id)}"><option value="unknown" ${!r || !r.verifStates[v.id] || r.verifStates[v.id] === 'unknown' ? 'selected' : ''}>Не указано</option><option value="yes" ${r && r.verifStates[v.id] === 'yes' ? 'selected' : ''}>Пройдена</option><option value="no" ${r && r.verifStates[v.id] === 'no' ? 'selected' : ''}>Не пройдена</option></select></div>`).join('');
+  const startValue = r && r.cooldownStart ? toLocalInput(r.cooldownStart) : toLocalInput(new Date().toISOString());
+
+  document.getElementById('recordFormBody').innerHTML = `<input type="hidden" name="id" value="${r ? esc(r.id) : ''}">
+    <div class="form-grid">
+      <div class="field"><label for="testId">ID записи *</label><input id="testId" name="testId" required autocomplete="off" spellcheck="false" placeholder="Любые символы" value="${r ? esc(r.testId) : ''}"></div>
+      <div class="field"><label for="passwordLabel">Пароль</label><input id="passwordLabel" name="passwordLabel" placeholder="Название записи" value="${r ? esc(r.passwordLabel) : ''}"></div>
+      <div class="field full"><div class="section-title">TOTP</div><div id="totpArea"></div></div>
+      <div class="field"><label for="status">Статус КД</label><select id="status" name="status"><option value="active" ${!r || r.status === 'active' ? 'selected' : ''}>Активен</option><option value="blocked" ${r && r.status === 'blocked' ? 'selected' : ''}>Блок</option><option value="fraud" ${r && r.status === 'fraud' ? 'selected' : ''}>Фрод КД</option></select></div>
+      <div class="field" id="cooldownField"><label for="cooldownStart">Дата и время начала Фрод КД</label><input type="datetime-local" id="cooldownStart" name="cooldownStart" value="${esc(startValue)}"><span class="hint">Ровно 72 часа от выбранного момента.</span></div>
+      
+      <div class="field full">
+        <div class="section-title">Операторы SIM</div>
+        <div class="sim-columns" id="simCheckboxes">${simHtml || '<span class="muted">Добавьте операторов во вкладке «Операторы».</span>'}</div>
+      </div>
+      
+      <div class="field full"><div class="section-title">Банки и сервисы</div><div class="bank-grid">${banksHtml || '<span class="muted">Добавьте сервисы во вкладке «Банки».</span>'}</div></div>
+      <div class="field full"><div class="section-title">Верификация</div><div class="bank-grid">${verifHtml || '<span class="muted">Добавьте верификации во вкладке «Верификация».</span>'}</div></div>
+      <div class="field full"><label for="note">Комментарий</label><textarea id="note" name="note" placeholder="Комментарий">${r ? esc(r.note) : ''}</textarea></div>
+    </div>`;
+
+  renderTotpArea();
+
+  const simCbs = document.querySelectorAll('input[name="sims"]');
+  simCbs.forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const val = e.target.value;
+      const box = document.querySelector(`.sim-item-box[data-sim-box="${val}"]`);
+      const metaInputs = box.querySelector('.sim-meta-inputs');
+      if (e.target.checked) {
+        box.classList.add('active');
+        metaInputs.classList.remove('hidden');
+      } else {
+        box.classList.remove('active');
+        metaInputs.classList.add('hidden');
+      }
+    });
+  });
+
+  const status = document.getElementById('status');
+  const start = document.getElementById('cooldownStart');
+  const field = document.getElementById('cooldownField');
+  const updateTimerField = () => { field.classList.toggle('hidden', status.value !== 'fraud'); start.required = status.value === 'fraud'; };
+  status.addEventListener('change', updateTimerField);
+  updateTimerField();
+  document.getElementById('recordDialog').showModal();
+}
+
+function openSimple(kind, id){
+  const cfg = { operator: { list: () => data.operators, add: 'Добавить оператора', rename: 'Переименовать оператора', ph: 'Название оператора' }, bank: { list: () => data.banks, add: 'Добавить банк / сервис', rename: 'Переименовать банк / сервис', ph: 'Название банка или сервиса' }, verification: { list: () => data.verifications, add: 'Добавить верификацию', rename: 'Переименовать верификацию', ph: 'Название верификации' } }[kind];
+  const collection = cfg.list(); const entry = id ? collection.find(x => x.id === id) : null;
+  document.getElementById('simpleDialogTitle').textContent = entry ? cfg.rename : cfg.add;
+  document.getElementById('simpleForm').dataset.kind = kind; document.getElementById('simpleForm').dataset.id = id || '';
+  document.getElementById('simpleFormBody').innerHTML = `<div class="field"><label for="simpleName">Название *</label><input id="simpleName" name="name" required maxlength="60" value="${entry ? esc(entry.name) : ''}" placeholder="${cfg.ph}"></div>`;
+  document.getElementById('simpleDialog').showModal();
+}
+
+function showTab(tab){ document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab)); ['records','operators','banks','verifications','backup'].forEach(t => document.getElementById('view-' + t).classList.toggle('hidden', t !== tab)); }
+
+function tick(){
+  const changed = normalizeTimers();
+  const rem = totpRemaining(); const cls = totpRemClass(rem);
+  document.querySelectorAll('.countdown[data-end]').forEach(el => { el.textContent = remaining(el.dataset.end); });
+  document.querySelectorAll('[data-totp]').forEach(el => { el.textContent = formatCode(totpCode(el.dataset.totp)); });
+  document.querySelectorAll('[data-totp-rem]').forEach(el => { el.textContent = `↻ ${rem}с`; el.classList.remove('warn','crit'); if (cls) el.classList.add(cls); });
+  if(changed){ renderRecords(); renderStats(); }
+}
+
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+document.getElementById('addRecord').addEventListener('click', () => openRecord(null));
+document.getElementById('addOperator').addEventListener('click', () => openSimple('operator'));
+document.getElementById('addBank').addEventListener('click', () => openSimple('bank'));
+document.getElementById('addVerification').addEventListener('click', () => openSimple('verification'));
+document.getElementById('recordSearch').addEventListener('input', renderRecords);
+
+document.addEventListener('click', e => {
+  const close = e.target.closest('[data-close]'); if(close){ document.getElementById(close.dataset.close).close(); return; }
+  const copyId = e.target.closest('[data-copy-id]'); if (copyId){ const r = data.records.find(x => x.id === copyId.dataset.copyId); if (r){ copyText(r.testId); showCopiedToast('ID скопирован: ' + r.testId); } return; }
+  const copyPass = e.target.closest('[data-copy-pass]'); if (copyPass){ const r = data.records.find(x => x.id === copyPass.dataset.copyPass); if (r && r.passwordLabel){ copyText(r.passwordLabel); showCopiedToast('Пароль скопирован: ' + r.passwordLabel); } return; }
+  const copyBtn = e.target.closest('[data-copy-totp]'); if (copyBtn){ const r = data.records.find(x => x.id === copyBtn.dataset.copyTotp); if (r && r.totp){ const code = totpCode(r.totp.secret); copyText(code); showCopiedToast('Код скопирован: ' + formatCode(code)); } return; }
+  if (e.target.id === 'totpAdd' || e.target.id === 'totpChange'){ formTotpAdding = true; renderTotpArea(); return; }
+  if (e.target.id === 'totpCancel'){ formTotpAdding = false; renderTotpArea(); return; }
+  if (e.target.id === 'totpGen'){ const inp = document.getElementById('totpInput'); if (inp) inp.value = genSecret(); return; }
+  if (e.target.id === 'totpConfirm'){ const inp = document.getElementById('totpInput'); const parsed = parseTotpInput(inp ? inp.value : ''); if (!parsed){ alert('Не удалось распознать TOTP. Вставь base32-секрет или полную otpauth:// ссылку.'); return; } formTotp = parsed; formTotpAdding = false; renderTotpArea(); return; }
+  if (e.target.id === 'totpRemove'){ if (confirm('Удалить TOTP у этой записи?')){ formTotp = null; renderTotpArea(); } return; }
+  
+  const edit = e.target.closest('[data-edit]'); if(edit){ openRecord(edit.dataset.edit); return; }
+  const eo = e.target.closest('[data-edit-operator]'); if(eo){ openSimple('operator', eo.dataset.editOperator); return; }
+  const eb = e.target.closest('[data-edit-bank]'); if(eb){ openSimple('bank', eb.dataset.editBank); return; }
+  const ev = e.target.closest('[data-edit-verification]'); if(ev){ openSimple('verification', ev.dataset.editVerification); return; }
+  const delOp = e.target.closest('[data-delete-operator]'); if(delOp){ if(confirm('Удалить оператора из справочника? Существующие выборы в карточках останутся как архивные значения.')){ data.operators = data.operators.filter(x => x.id !== delOp.dataset.deleteOperator); save(); renderAll(); } return; }
+  const delBank = e.target.closest('[data-delete-bank]'); if(delBank){ if(confirm('Удалить банк / сервис из справочника и карточек тестовых записей?')){ const id = delBank.dataset.deleteBank; data.banks = data.banks.filter(x => x.id !== id); data.records.forEach(r => delete r.bankStates[id]); save(); renderAll(); } return; }
+  const delVerif = e.target.closest('[data-delete-verification]'); if(delVerif){ if(confirm('Удалить верификацию из справочника и карточек тестовых записей?')){ const id = delVerif.dataset.deleteVerification; data.verifications = data.verifications.filter(x => x.id !== id); data.records.forEach(r => { if(r.verifStates) delete r.verifStates[id]; }); save(); renderAll(); } return; }
+});
+
+document.getElementById('recordForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const form = e.currentTarget; const fd = new FormData(form);
+  const id = String(fd.get('id') || ''); const testId = String(fd.get('testId') || '').trim();
+
+  if(!testId){ alert('Введите ID записи.'); return; }
+  if(data.records.some(r => r.testId.toLowerCase() === testId.toLowerCase() && r.id !== id)){ alert('Такая запись уже существует.'); return; }
+
+  const status = String(fd.get('status')); let start = '', end = '';
+  if(status === 'fraud'){ const raw = String(fd.get('cooldownStart') || ''); const stamp = new Date(raw).getTime(); if(!raw || !Number.isFinite(stamp)){ alert('Укажите корректную дату и время начала периода.'); return; } start = new Date(stamp).toISOString(); end = new Date(stamp + COOLDOWN_MS).toISOString(); }
+  
+  const sims = []; const simMeta = {};
+  form.querySelectorAll('input[name="sims"]:checked').forEach(cb => {
+    const val = cb.value;
+    sims.push(val);
+    const countInput = form.querySelector(`input[data-sim-count="${val}"]`);
+    const dateInput = form.querySelector(`input[data-sim-date="${val}"]`);
+    const count = countInput ? parseInt(countInput.value, 10) || 1 : 1;
+    const dateStr = dateInput ? dateInput.value : '';
+    const date = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
+    simMeta[val] = { count, date };
+  });
+
+  const bankStates = {}; data.banks.forEach(b => { bankStates[b.id] = String(fd.get('bank_' + b.id) || 'unknown'); });
+  const verifStates = {}; data.verifications.forEach(v => { verifStates[v.id] = String(fd.get('verif_' + v.id) || 'unknown'); });
+  const old = id ? data.records.find(r => r.id === id) : null;
+  const oldTotp = old && old.totp ? old.totp : null;
+  let prevTotp = old && old.prevTotp ? old.prevTotp : null;
+  if (oldTotp && (!formTotp || formTotp.secret !== oldTotp.secret)){ prevTotp = { secret: oldTotp.secret, issuer: oldTotp.issuer || '', label: oldTotp.label || '' }; }
+
+  const rec = {
+    id: id || uid(), testId, passwordLabel: String(fd.get('passwordLabel') || '').trim(), status,
+    cooldownStart: start || (old ? old.cooldownStart : ''), cooldownEnd: end || (old ? old.cooldownEnd : ''),
+    sims, simMeta, bankStates, verifStates,
+    totp: formTotp ? { secret: formTotp.secret, issuer: formTotp.issuer || '', label: formTotp.label || '' } : null,
+    prevTotp, note: String(fd.get('note') || '').trim(),
+    createdAt: old ? old.createdAt : new Date().toISOString(), updatedAt: new Date().toISOString()
+  };
+  if(status !== 'fraud' && !old){ rec.cooldownStart = ''; rec.cooldownEnd = ''; }
+  if(status === 'fraud' && new Date(end).getTime() <= Date.now()){ rec.status = 'active'; }
+  if(old) data.records = data.records.map(r => r.id === id ? rec : r); else data.records.push(rec);
+  save(); document.getElementById('recordDialog').close(); renderAll();
+});
+
+document.getElementById('simpleForm').addEventListener('submit', e => {
+  e.preventDefault(); const form = e.currentTarget; const kind = form.dataset.kind; const id = form.dataset.id;
+  const name = String(new FormData(form).get('name') || '').trim(); if(!name) return;
+  const list = kind === 'operator' ? data.operators : kind === 'bank' ? data.banks : data.verifications;
+  if(list.some(x => x.name.toLowerCase() === name.toLowerCase() && x.id !== id)){ alert('Такое название уже есть в списке.'); return; }
+  if(id){ const item = list.find(x => x.id === id); if(item) item.name = name; } else list.push({ id: uid(), name });
+  save(); document.getElementById('simpleDialog').close(); renderAll();
+});
+
+document.getElementById('exportJson').addEventListener('click', () => {
+  const payload = { app: 'qa-sim-panel', version: 1, exportedAt: new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href = url; a.download = 'qa-sim-panel-backup.json'; a.click(); URL.revokeObjectURL(url);
+});
+
+document.getElementById('importJson').addEventListener('click', async () => {
+  const file = document.getElementById('importFile').files[0];
+  if(!file){ alert('Сначала выберите JSON-файл.'); return; }
+  try {
+    const parsed = JSON.parse(await file.text()); const candidate = parsed.data || parsed;
+    if(!Array.isArray(candidate.records) || !Array.isArray(candidate.operators) || !Array.isArray(candidate.banks)) throw new Error('Неверная структура резервной копии');
+    if(!confirm('Импорт заменит текущие данные. Продолжить?')) return;
+    data = normalizeData(candidate); save(); renderAll(); alert('Резервная копия импортирована.');
+  } catch(err) { alert('Не удалось импортировать файл: ' + err.message); }
+});
+
+initSettings(); initNick(); renderAll(); setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>
